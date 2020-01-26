@@ -1,0 +1,51 @@
+class Flow {
+    public:
+    int N, s, t;
+    vector<int> vst;
+    vector<vector<int> > adj;
+    
+    Flow(int N, int s, int t) {
+        this->N = N;
+        this->s = s;
+        this->t = t;
+        for (int i = 0; i < N; ++i) {
+            vst.push_back(0);
+            vector<int> temp(N);
+            adj.push_back(temp);
+        }
+    }
+    
+    void addEdge(int i, int j, int c) {
+        adj[i][j] += c;    
+    }
+    
+    int dfs(int cur, int curFlow) {
+        if (cur == t)
+            return curFlow;
+        vst[cur] = true;
+        for (int i = 0; i < N; ++i) {
+            if (!vst[i] && adj[cur][i]) {
+                int res = dfs(i, min(curFlow, adj[cur][i]));
+                if (res) {
+                    addEdge(cur, i, -res);
+                    addEdge(i, cur, res);
+                    return res;
+                }
+            }
+        }
+        return 0;
+    }
+    
+    int solve() {
+        int res = 0;
+        int curFlow = -1;
+        int t = 0;
+        while(curFlow) {
+            for (int i = 0; i < N; ++i)
+                vst[i] = 0;
+            curFlow = dfs(s,INT_MAX);
+            res += curFlow;
+        }
+        return res;
+    }
+};
