@@ -1,0 +1,76 @@
+/*
+Adaptable lazy segtree with sum update and min query.
+Code adapted from Algorithms Live -- https://www.youtube.com/watch?v=Tr-xEGoByFQ&t=2826s 
+
+TODO templates
+*/
+
+class SegTree {
+    public:
+    int N; // size
+    vector<pair<int,int> > range; // (range[cur].first,range[cur].second) -- segment that node cur represents
+    vector<int> delta;
+    vector<int> data; // actual values
+    
+    SegTree(int N) {
+        this->N = N;
+        for (int i = 0; i < 4*N+1; ++i) {
+            range.push_back({0,0});
+            delta.push_back(0);
+            data.push_back(0);
+        }
+        init(1,0,N-1);
+    }
+    
+    void init(int cur, int l, int r) {
+        range[cur].first = l;
+        range[cur].second = r;
+        if (l == r)
+            return;
+        int mid = (l+r)/2;
+        init(2*cur,l,mid);
+        init(2*cur+1,mid+1,r);
+    }
+    
+    // push deltas
+    void prop(int cur) {
+        delta[2*cur] += delta[cur];
+        delta[2*cur+1] += delta[cur];
+        delta[cur] = 0;
+    }
+    
+    // recalculate min
+    void upd(int cur) {
+        data[cur] = min(data[2*cur]+delta[2*cur],data[2*cur+1]+delta[2*cur+1]);
+    }
+    
+    void inc(int cur, int l, int r, int val) {
+        // out of bounds
+        if (r < range[cur].first || l > range[cur].second)
+            return;
+        // complete fit
+        if (l <= range[cur].first && r >= range[cur].second) {
+            delta[cur] += val;
+            return;
+        }
+        prop(cur);
+        inc(2*cur, l, r, val);
+        inc(2*cur+1, l, r, val);
+        upd(cur);
+    }
+    
+    int query(int cur, int l, int r) {
+        // out of bounds
+        if (r < range[cur].first || l > range[cur].second)
+            return INT_MAX;
+        // complete fit
+        if (l <= range[cur].first && r >= range[cur].second) {
+            return data[cur] + delta[cur];
+        }
+        prop(cur);
+        int res = min(query(2*cur,l,r),query(2*cur+1  ,l,r));
+        upd(cur);
+        return res;
+    }
+    
+};
